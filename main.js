@@ -1,12 +1,18 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 
-//const config = require('./config.json');
-const { prefix, token } = require('./config.json');
+const { Client, MessageEmbed } = require('discord.js');
+
+const { prefixes, token } = require('./config.json');
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+
+const fetch = require('node-fetch');
+
+var containsPre = true;
+var sliceLength = 0;
 
 for (const file of commandFiles) {
 	const command = require(`./commands/${file}`);
@@ -24,10 +30,23 @@ client.once('ready', () => {
 });
 
 client.on('message', message =>{
-    
-    if (!message.content.startsWith(prefix) || message.author.bot) return;
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/);//regex to split arguments
+    if (message.author.bot) return;
+
+    containsPre=false;
+
+    prefixes.forEach(function (prefix, index) {
+        if(message.content.toLowerCase().startsWith(prefix))
+        {
+            containsPre=true;
+            sliceLength=prefix.length;
+        }
+    });
+    
+    if (!containsPre) return;
+
+    const args = message.content.slice(sliceLength).trim().split(/ +/);//regex to split arguments
+    
     const commandName = args.shift().toLowerCase();
     
     //Dynamically Execute Commands:
